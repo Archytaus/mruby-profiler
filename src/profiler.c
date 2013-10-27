@@ -2,6 +2,7 @@
 #include "mruby.h"
 #include "mruby/irep.h"
 #include "mruby/array.h"
+#include "mruby/debug.h"
 #include <time.h>
 #include <sys/time.h>
 #include <stdlib.h>
@@ -144,10 +145,12 @@ mrb_mruby_profiler_get_prof_info(mrb_state *mrb, mrb_value self)
   mrb_int iseqoff;
   mrb_value res;
   const char *str;
+  int32_t line;
   mrb_get_args(mrb, "ii", &irepno, &iseqoff);
 
   res = mrb_ary_new_capa(mrb, 5);
-  str = result.pirep[irepno].irep->filename;
+
+  str = mrb_debug_get_filename(result.pirep[irepno].irep, 0);
   if (str) {
     mrb_ary_push(mrb, res, mrb_str_new(mrb, str, strlen(str)));
   }
@@ -155,9 +158,9 @@ mrb_mruby_profiler_get_prof_info(mrb_state *mrb, mrb_value self)
     mrb_ary_push(mrb, res, mrb_nil_value());
   }
 
-  if (result.pirep[irepno].irep->lines) {
-    mrb_ary_push(mrb, res, 
-		 mrb_fixnum_value(result.pirep[irepno].irep->lines[iseqoff]));
+  line = mrb_debug_get_line(result.pirep[irepno].irep, iseqoff);
+  if (line) {
+    mrb_ary_push(mrb, res, mrb_fixnum_value(line));
   }
   else {
     mrb_ary_push(mrb, res, mrb_nil_value());
